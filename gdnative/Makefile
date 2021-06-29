@@ -8,11 +8,13 @@ else
 endif
 
 # Cross compilers for windows targets if not running windows
+# TODO: test/fix when running on windows
 ifneq ($(OS),Windows_NT)
 windows32: CC := i686-w64-mingw32-cc
 windows64: CC := x86_64-w64-mingw32-cc
 endif
-# TODO: test/fix when running on windows
+# Emscripten compiler for WebAssembly (WASM) libraries
+%.wasm: CC := emcc
 
 example_windows64.dll: example.c
 	$(CC) $< -o $@ $(CFLAGS) -shared
@@ -27,7 +29,7 @@ example_linux32.so: example.c
 	$(CC) $< -o $@ $(CFLAGS) -shared -fPIC -m32 
 
 example_wasm32.wasm: example.c
-	emcc $< -o $@ $(CFLAGS) -s SIDE_MODULE=1
+	$(CC) $< -o $@ $(CFLAGS) -s SIDE_MODULE=1
 
 windows32: example_windows32.dll
 windows64: example_windows64.dll
