@@ -1,0 +1,12 @@
+root = true
+
+[*]
+charset = utf-8
+
+[*.{gd,c}]
+indent_style = tabs
+indent_size = 4
+
+[Makefile]
+indent_style = tabs
+indent_size = 8
