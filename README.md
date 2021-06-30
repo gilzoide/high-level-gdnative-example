@@ -4,9 +4,9 @@ in the [gdnative](gdnative) folder, with a [Makefile](gdnative/Makefile) for
 building it.
 
 The `GDNativeLibrary` Resource [gdnative/example.gdnlib](gdnative/example.gdnlib)
-is configured with the Makefile targets and there is an example of calling the
-functions directly using `GDNative.call_native` from GDScript in the
-[example_call_native.gd](example_call_native.gd) file.
+is configured with the Makefile targets' outputs and there is an example of
+calling the functions directly using `GDNative.call_native` from GDScript in
+the [example_call_native.gd](example_call_native.gd) file.
 
 
 ## Building the GDNative library
