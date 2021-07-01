@@ -33,6 +33,38 @@ GDN_EXPORT godot_variant sum_ints(godot_array *args) {
 }
 
 // 2.b) Declare NativeScript methods, if there are any (TODO)
+typedef struct {
+    hgdn_string message;
+} example_class_data;
+
+void example_destroy(godot_object *instance, void *method_data, void *data) {
+    example_class_data *example = (example_class_data *) data;
+    hgdn_string_destroy(&example->message);
+}
+
+void example_set_message(godot_object *instance, void *method_data, void *data, godot_variant *var) {
+    example_class_data *example = (example_class_data *) data;
+    example->message = hgdn_variant_get_string(var);
+    hgdn_object_call(instance, "emit_signal", "message_set", var);
+}
+
+godot_variant example_get_message(godot_object *instance, void *method_data, void *data) {
+    example_class_data *example = (example_class_data *) data;
+    return hgdn_new_variant(example->message.ptr);
+}
+
+godot_variant example_print_message(godot_object *instance, void *method_data, void *data, int argc, godot_variant **argv) {
+    if (argc == 0) {
+        example_class_data *example = (example_class_data *) data;
+        hgdn_print("Example message: %s", example->message.ptr);
+    }
+    else {
+        hgdn_string message = hgdn_args_get_string(argv, 0);
+        hgdn_print("Argument message: %s", message.ptr);
+        hgdn_string_destroy(&message);
+    }
+    return hgdn_new_nil_variant();
+}
 
 
 // 3.a) Add `godot_gdnative_init`, the function that will be called when Godot
@@ -42,18 +74,39 @@ GDN_EXPORT void godot_gdnative_init(godot_gdnative_init_options *options) {
     // as it populates the global API pointers from options
     hgdn_gdnative_init(options);
     // `hgdn_print` uses `printf` formatted values
-    hgdn_print("GDNative initialized%s", options->in_editor ? " in editor" : "");
+    hgdn_print("GDNativeLibrary initialized%s", options->in_editor ? " in editor" : "");
 }
 
 // 3.b) Add `godot_gdnative_terminate`, the function that will be called when Godot
 // unloads this GDNativeLibrary, and call `hgdn_gdnative_terminate` from it.
 GDN_EXPORT void godot_gdnative_terminate(godot_gdnative_terminate_options *options) {
     hgdn_gdnative_terminate(options);
+    hgdn_print("GDNativeLibrary terminated%s", options->in_editor ? " in editor" : "");
 }
 
 // 4) Add `godot_nativescript_init`, the function that will be called when Godot
 // initializes a NativeScript with this GDNativeLibrary, and register classes,
 // if there are any.
-GDN_EXPORT void godot_nativescript_init(void *desc) {
-    // TODO
+GDN_EXPORT void godot_nativescript_init(void *handle) {
+    hgdn_class_info example_class_info = {
+        "Example", "Node",
+        .create = hgdn_instance_create_func_alloc(example_class_data),
+        .destroy = { &example_destroy },
+        .properties = hgdn_properties({
+            "message", { &example_set_message }, { &example_get_message },
+            .type = GODOT_VARIANT_TYPE_STRING,
+            .usage = GODOT_PROPERTY_USAGE_DEFAULT,
+        }, {
+            "some_constant", .getter = hgdn_property_constant(((hgdn_vector2){ 1, 2 })),
+        }),
+        .methods = hgdn_methods({
+            "print_message", { &example_print_message },
+        }),
+        .signals = hgdn_signals({
+            "message_set", hgdn_signal_arguments({ "message", GODOT_VARIANT_TYPE_STRING }),
+        }),
+        .tool = false,
+        .documentation = "This is an example class",
+    };
+    hgdn_register_class(handle, &example_class_info);
 }
